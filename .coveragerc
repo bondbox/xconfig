@@ -1,7 +1,8 @@
 [run]
 omit =
-    xkits_config/unittest/*
-    xkits_config/attribute.py
+    xconfig*/attribute.py
+    xconfig*/setup.py
+    attribute.py
 
 [report]
 exclude_lines =

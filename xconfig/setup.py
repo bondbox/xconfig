@@ -1,15 +1,18 @@
 # coding=utf-8
 
+from os.path import dirname
+from os.path import join
 from urllib.parse import urljoin
 
 from setuptools import setup
 from setuptools.command.install import install
 
-from xkits_config import __author__
-from xkits_config import __author_email__
-from xkits_config import __description__
-from xkits_config import __urlhome__
-from xkits_config import __version__
+from attribute import __author__
+from attribute import __author_email__
+from attribute import __description__
+from attribute import __project__
+from attribute import __urlhome__
+from attribute import __version__
 
 __urlcode__ = __urlhome__
 __urldocs__ = __urlhome__
@@ -17,10 +20,12 @@ __urlbugs__ = urljoin(__urlhome__, "issues")
 
 
 def all_requirements():
-    return [
-        f"xkits-config-file>={__version__}",
-        "toml",
-    ]
+    def read_requirements(path: str):
+        with open(path, "r", encoding="utf-8") as rhdl:
+            return rhdl.read().splitlines()
+
+    requirements = read_requirements(join(dirname(__file__), "requirements.txt"))  # noqa:E501
+    return requirements
 
 
 class CustomInstallCommand(install):
@@ -32,7 +37,7 @@ class CustomInstallCommand(install):
 
 
 setup(
-    name="xkits-config-toml",
+    name=__project__,
     version=__version__,
     description=__description__,
     url=__urlhome__,
@@ -41,7 +46,7 @@ setup(
     project_urls={"Source Code": __urlcode__,
                   "Bug Tracker": __urlbugs__,
                   "Documentation": __urldocs__},
-    py_modules=["xkits_config_toml"],
+    py_modules=["xkits_config_annot", "xkits_config_class", "xkits_config"],
     install_requires=all_requirements(),
     cmdclass={
         "install": CustomInstallCommand,

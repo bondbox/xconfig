@@ -1,18 +1,22 @@
 # coding:utf-8
 
 from dataclasses import dataclass
+from os.path import dirname
+from os.path import join
 import sys
 from typing import Optional
 from typing import Union
 from unittest import TestCase
 from unittest import main
 
-from attr import attrib
-from attr import attrs
+sys.path.insert(0, join(dirname(__file__), "..", "xconfig_attr"))
+sys.path.insert(0, join(dirname(__file__), "..", "xconfig"))
 
 from xkits_config import Settings
-from xkits_config import __description__
-from xkits_config import __version__
+from xkits_config_annot import Annot
+
+from attribute import __description__
+from attribute import __version__
 
 
 @dataclass
@@ -21,19 +25,43 @@ class FakeModule(Settings):
 
 
 if sys.version_info >= (3, 10):
-    @attrs
+    @dataclass
     class FakeSettings(Settings):
-        name: str = attrib()
-        module: FakeModule | None = attrib(default=None)
-        version: Optional[str] = attrib(default=__version__)
-        description: Union[str, None] = attrib(default=None)
+        name: str
+        module: FakeModule | None = None
+        version: Optional[str] = __version__
+        description: Union[str, None] = None
 else:
-    @attrs
+    @dataclass
     class FakeSettings(Settings):
-        name: str = attrib()
-        module: Optional[FakeModule] = attrib(default=None)
-        version: Optional[str] = attrib(default=__version__)
-        description: Union[str, None] = attrib(default=None)
+        name: str
+        module: Optional[FakeModule] = None
+        version: Optional[str] = __version__
+        description: Union[str, None] = None
+
+
+class TestAnnot(TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        pass
+
+    @classmethod
+    def tearDownClass(cls):
+        pass
+
+    def setUp(self):
+        self.instance = Annot(name="example", type=str)
+
+    def tearDown(self):
+        pass
+
+    def test_str(self):
+        name = repr(self.instance.name)
+        type = repr(self.instance.type)
+        default = repr(self.instance.default)
+        expected = f"Annot(name={name},type={type},default={default})"
+        self.assertEqual(str(self.instance), expected)
 
 
 class TestSettings(TestCase):
@@ -92,25 +120,24 @@ class TestSettings(TestCase):
     def test_load_check_subclass_type(self):
         @dataclass
         class FakeModule1(Settings):
-            index: int = attrib()
+            index: int
 
-        @attrs
+        @dataclass
         class FakeModule2(Settings):
-            index: int = attrib()
+            index: int
 
         @dataclass
         class FakeModule3(Settings):
-            index: int = attrib()
+            index: int
 
         if sys.version_info >= (3, 10):
-            @attrs
+            @dataclass
             class FakeSettings(Settings):
-                module: Union[FakeModule1, FakeModule2] | FakeModule3 = attrib()  # noqa:E501
+                module: Union[FakeModule1, FakeModule2] | FakeModule3
         else:
-            @attrs
+            @dataclass
             class FakeSettings(Settings):
-                module: Union[FakeModule1, FakeModule2, FakeModule3] = attrib()
-
+                module: Union[FakeModule1, FakeModule2, FakeModule3]
         self.assertRaises(TypeError, FakeSettings.load, module={"index": 1})
 
     def test_load(self):
@@ -124,6 +151,12 @@ class TestSettings(TestCase):
         self.assertEqual(instance.name, "FakeSettings")
         self.assertEqual(instance.version, __version__)
         self.assertEqual(instance.description, None)
+
+    def test_parse(self):
+        class FakeSettings(Settings):
+            pass
+
+        self.assertRaises(Exception, FakeSettings.load)
 
 
 if __name__ == "__main__":

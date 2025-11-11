@@ -13,16 +13,6 @@ from xkits_lib.annot import each_annot
 from xkits_config_annot import Annot
 from xkits_config_class import parse
 
-__project__ = "xkits-config"
-__version__ = "0.1"
-__urlhome__ = "https://github.com/bondbox/xconfig/"
-__description__ = "Config module"
-
-# author
-__author__ = "Mingzhe Zou"
-__author_email__ = "zoumingzhe@outlook.com"
-
-
 TS = TypeVar("TS", bound="Settings")
 
 

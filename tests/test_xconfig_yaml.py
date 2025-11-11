@@ -1,10 +1,17 @@
 # coding:utf-8
 
+from os.path import dirname
+from os.path import join
+import sys
 from dataclasses import dataclass
 import os
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 from unittest import main
+
+sys.path.insert(0, join(dirname(__file__), "..", "xconfig_yaml"))
+sys.path.insert(0, join(dirname(__file__), "..", "xconfig_file"))
+sys.path.insert(0, join(dirname(__file__), "..", "xconfig"))
 
 from xkits_config_file import ConfigFile
 from xkits_config_yaml import ConfigYAML
