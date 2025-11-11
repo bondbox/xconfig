@@ -21,4 +21,4 @@ jobs:
         make build install test
     - name: Upload to PyPI
       run: |
-        xpip-upload --token ${{ secrets.PYPI_TOKEN }} dist/*
+        xpip-upload --token ${{ secrets.PYPI_TOKEN }} xconfig*/dist/*
