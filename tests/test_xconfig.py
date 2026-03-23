@@ -1,6 +1,7 @@
 # coding:utf-8
 
 from dataclasses import dataclass
+import os
 from os.path import dirname
 from os.path import join
 import sys
@@ -8,6 +9,7 @@ from typing import Optional
 from typing import Union
 from unittest import TestCase
 from unittest import main
+from unittest import mock
 
 sys.path.insert(0, join(dirname(__file__), "..", "xconfig_attr"))
 sys.path.insert(0, join(dirname(__file__), "..", "xconfig"))
@@ -100,6 +102,19 @@ class TestSettings(TestCase):
         self.assertEqual(self.instance.name, "FakeSettings")
         self.assertEqual(self.instance.version, __version__)
         self.assertEqual(self.instance.description, None)
+
+    def test_get_environ(self):
+        with mock.patch.dict(os.environ, {"XC_FAKESETTINGS_VERSION": "VERSION1"}):  # noqa:E501
+            self.assertEqual(self.instance.version, "VERSION1")
+
+        @dataclass
+        class FakeSettings2(Settings):
+            version: str
+            ENV_PREFIX: str = "config"
+
+        with mock.patch.dict(os.environ, {"CONFIG_VERSION": "VERSION2"}):
+            instance = FakeSettings2(version = "VERSION0")
+            self.assertEqual(instance.version, "VERSION2")
 
     def test_set_description(self):
         self.instance["description"] = __description__

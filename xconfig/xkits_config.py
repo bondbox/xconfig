@@ -1,22 +1,24 @@
 # coding:utf-8
 
 from inspect import isclass
+import os
 from typing import Any
 from typing import Dict
 from typing import Iterator
 from typing import List
+from typing import Optional
 from typing import Type
 from typing import TypeVar
 
-from xkits_lib.annot import each_annot
-
 from xkits_config_annot import Annot
 from xkits_config_class import parse
+from xkits_lib.annot import each_annot
 
 TS = TypeVar("TS", bound="Settings")
 
 
 class Settings():
+    ENV_PREFIX: Optional[str] = None
 
     def __iter__(self) -> Iterator[str]:
         return iter(vars(self))
@@ -29,6 +31,20 @@ class Settings():
 
     def __contains__(self, name: str) -> bool:
         return hasattr(self, name)
+
+    def __getattribute__(self, name: str) -> Any:
+        if callable(attr := super().__getattribute__(name)) or name[0] == "_" or name in ["ENV_PREFIX"]:  # noqa:E501
+            return attr
+
+        if not isinstance(prefix := super().__getattribute__("ENV_PREFIX"), str) or len(prefix) <= 0:  # noqa:E501
+            target: Type = super().__getattribute__("__class__")
+            prefix: str = f"XC_{target.__name__}"
+
+        try:
+            key: str = f"{prefix}_{name}".upper()
+            return os.environ[key]
+        except KeyError:
+            return attr
 
     def set(self, name: str, value: Any) -> None:
         setattr(self, name, value)
