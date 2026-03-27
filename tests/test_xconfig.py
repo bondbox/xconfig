@@ -110,12 +110,23 @@ class TestSettings(TestCase):
         @dataclass
         class FakeSettings2(Settings):
             version: str
+            number = 1234567890
             # Environment Variable Prefix
             ENVAR_PREFIX: str = "config"
 
-        with mock.patch.dict(os.environ, {"CONFIG_VERSION": "VERSION"}):
+            @property
+            def hello(self) -> str:
+                return "world"
+
+        with mock.patch.dict(os.environ, {
+            "CONFIG_VERSION": "VERSION",
+            "CONFIG_NUMBER": "12345678",
+            "CONFIG_HELLO": "WORLD",
+        }):
             instance = FakeSettings2(version="_VERSION_")
             self.assertEqual(instance.version, "VERSION")
+            self.assertEqual(instance.number, 1234567890)
+            self.assertEqual(instance.hello, "world")
 
     def test_set_description(self):
         self.instance["description"] = __description__

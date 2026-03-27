@@ -9,6 +9,7 @@ from typing import List
 from typing import Optional
 from typing import Type
 from typing import TypeVar
+from typing import get_args
 
 from xkits_config_annot import Annot
 from xkits_config_class import parse
@@ -33,15 +34,12 @@ class Settings():
         return hasattr(self, name)
 
     def __getattribute__(self, name: str) -> Any:
-        if callable(attr := super().__getattribute__(name)) or name[0] == "_" or name in ["ENVAR_PREFIX"]:  # noqa:E501
+        attr: Any = super().__getattribute__(name)
+
+        if callable(attr) or name[0] == "_" or name in ["ENVAR_PREFIX"]:
             return attr
 
-        try:
-            prefix: str = self.__get_envar_prefix
-            key: str = f"{prefix}_{name}".upper()
-            return os.environ[key]
-        except KeyError:
-            return attr
+        return self.__get_attr(name=name, default=attr)
 
     @property
     def __get_envar_prefix(self) -> str:
@@ -49,6 +47,21 @@ class Settings():
             return prefix
 
         return f"XC_{self.__class__.__name__}"
+
+    def __get_annot(self, name: str):
+        """Get annotation for specified class property"""
+        return self.__class__.__annotations__.get(name)
+
+    def __get_attr(self, name: str, default: Any) -> Any:
+        if (annot := self.__get_annot(name=name)) is None:
+            return default
+
+        if annot is str or str in get_args(annot):
+            prefix: str = self.__get_envar_prefix
+            key: str = f"{prefix}_{name}".upper()
+            return os.environ.get(key, default)
+
+        return default
 
     def set(self, name: str, value: Any) -> None:
         setattr(self, name, value)
