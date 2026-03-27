@@ -56,6 +56,7 @@ class Settings():
         if (annot := self.__get_annot(name=name)) is None:
             return default
 
+        # environment variable only support str type
         if annot is str or str in get_args(annot):
             prefix: str = self.__get_envar_prefix
             key: str = f"{prefix}_{name}".upper()
