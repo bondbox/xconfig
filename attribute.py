@@ -1,7 +1,7 @@
 # coding:utf-8
 
 __project__ = "xkits-config"
-__version__ = "0.3"
+__version__ = "0.3.1"
 __urlhome__ = "https://github.com/bondbox/xconfig/"
 __description__ = "Config module"
 
