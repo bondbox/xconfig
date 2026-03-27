@@ -6,13 +6,11 @@ from typing import Type
 
 from xkits_config_annot import Annot
 
-from attribute import __project__
-
 try:
     from xkits_config_attrs import parse_attrs
 except ImportError:  # pragma: no cover
     def parse_attrs(cls: Type[Any]) -> Generator[Annot, Any, None]:  # noqa:E501, pragma: no cover
-        raise NotImplementedError(f"Module {__project__}-attrs is not installed")  # noqa:E501
+        raise NotImplementedError("Module xkits-config-attrs is not installed")
 
 
 def parse_dataclass(cls: Type[Any]) -> Generator[Annot, Any, None]:
