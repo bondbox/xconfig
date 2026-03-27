@@ -36,15 +36,19 @@ class Settings():
         if callable(attr := super().__getattribute__(name)) or name[0] == "_" or name in ["ENVAR_PREFIX"]:  # noqa:E501
             return attr
 
-        if not isinstance(prefix := super().__getattribute__("ENVAR_PREFIX"), str) or len(prefix) <= 0:  # noqa:E501
-            target: Type = super().__getattribute__("__class__")
-            prefix: str = f"XC_{target.__name__}"
-
         try:
+            prefix: str = self.__get_envar_prefix
             key: str = f"{prefix}_{name}".upper()
             return os.environ[key]
         except KeyError:
             return attr
+
+    @property
+    def __get_envar_prefix(self) -> str:
+        if isinstance(prefix := self.ENVAR_PREFIX, str) and len(prefix) > 0:
+            return prefix
+
+        return f"XC_{self.__class__.__name__}"
 
     def set(self, name: str, value: Any) -> None:
         setattr(self, name, value)
