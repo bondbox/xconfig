@@ -110,11 +110,12 @@ class TestSettings(TestCase):
         @dataclass
         class FakeSettings2(Settings):
             version: str
-            ENV_PREFIX: str = "config"
+            # Environment Variable Prefix
+            ENVAR_PREFIX: str = "config"
 
-        with mock.patch.dict(os.environ, {"CONFIG_VERSION": "VERSION2"}):
-            instance = FakeSettings2(version = "VERSION0")
-            self.assertEqual(instance.version, "VERSION2")
+        with mock.patch.dict(os.environ, {"CONFIG_VERSION": "VERSION"}):
+            instance = FakeSettings2(version="_VERSION_")
+            self.assertEqual(instance.version, "VERSION")
 
     def test_set_description(self):
         self.instance["description"] = __description__

@@ -18,7 +18,7 @@ TS = TypeVar("TS", bound="Settings")
 
 
 class Settings():
-    ENV_PREFIX: Optional[str] = None
+    ENVAR_PREFIX: Optional[str] = None  # Environment Variable Prefix
 
     def __iter__(self) -> Iterator[str]:
         return iter(vars(self))
@@ -33,10 +33,10 @@ class Settings():
         return hasattr(self, name)
 
     def __getattribute__(self, name: str) -> Any:
-        if callable(attr := super().__getattribute__(name)) or name[0] == "_" or name in ["ENV_PREFIX"]:  # noqa:E501
+        if callable(attr := super().__getattribute__(name)) or name[0] == "_" or name in ["ENVAR_PREFIX"]:  # noqa:E501
             return attr
 
-        if not isinstance(prefix := super().__getattribute__("ENV_PREFIX"), str) or len(prefix) <= 0:  # noqa:E501
+        if not isinstance(prefix := super().__getattribute__("ENVAR_PREFIX"), str) or len(prefix) <= 0:  # noqa:E501
             target: Type = super().__getattribute__("__class__")
             prefix: str = f"XC_{target.__name__}"
 
