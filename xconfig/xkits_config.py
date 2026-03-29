@@ -22,7 +22,7 @@ class Settings():
     ENVAR_PREFIX: Optional[str] = None  # Environment Variable Prefix
 
     def __iter__(self) -> Iterator[str]:
-        return iter(vars(self))
+        return iter(v for v in vars(self) if v not in ["ENVAR_PREFIX"])
 
     def __setitem__(self, name: str, value: Any) -> None:
         return self.set(name=name, value=value)
@@ -37,6 +37,12 @@ class Settings():
         attr: Any = super().__getattribute__(name)
 
         if callable(attr) or name[0] == "_" or name in ["ENVAR_PREFIX"]:
+            return attr
+
+        if isinstance(attr, Settings) and attr.ENVAR_PREFIX is None:
+            envar: str = self.__get_envar_prefix
+            klass: str = attr.__class__.__name__
+            attr.ENVAR_PREFIX = f"{envar}_{klass}"
             return attr
 
         return self.__get_attr(name=name, default=attr)
@@ -71,7 +77,7 @@ class Settings():
         return getattr(self, name)
 
     def dump(self) -> Dict[str, Any]:
-        return {k: v.dump() if isinstance(v := self[k], Settings) else v for k in self}  # noqa:E501
+        return {k: v.dump() if isinstance(v := self[k], Settings) else v for k in self if k not in ["ENVAR_PREFIX"]}  # noqa:E501
 
     @classmethod
     def load(cls: Type[TS], **kwargs: Any) -> TS:
@@ -89,6 +95,7 @@ class Settings():
                         _subclasses.append(_arg)
 
                 if len(_subclasses) > 1:
+                    # Unable to support multiple Settings subclasses
                     _subclass_str: str = ", ".join(f"'{_sub.__name__}'" for _sub in _subclasses)  # noqa:E501
                     raise TypeError(f"{cls.__name__}.{field.name} has multiple Settings: [{_subclass_str}]")  # noqa:E501
 

@@ -33,6 +33,8 @@ if sys.version_info >= (3, 10):
         module: FakeModule | None = None
         version: Optional[str] = __version__
         description: Union[str, None] = None
+        # Environment Variable Prefix
+        ENVAR_PREFIX: str = "FakeConfig"
 else:
     @dataclass
     class FakeSettings(Settings):
@@ -40,6 +42,8 @@ else:
         module: Optional[FakeModule] = None
         version: Optional[str] = __version__
         description: Union[str, None] = None
+        # Environment Variable Prefix
+        ENVAR_PREFIX: str = "FakeConfig"
 
 
 class TestAnnot(TestCase):
@@ -94,6 +98,8 @@ class TestSettings(TestCase):
             self.assertIn(key, self.instance)
 
     def test_get(self):
+        self.assertEqual(self.instance["ENVAR_PREFIX"], "FakeConfig")
+        self.assertEqual(self.instance.ENVAR_PREFIX, "FakeConfig")
         self.assertIsInstance(self.instance["module"], FakeModule)
         self.assertIsInstance(self.instance.module, FakeModule)
         self.assertEqual(self.instance["name"], "FakeSettings")
@@ -103,25 +109,26 @@ class TestSettings(TestCase):
         self.assertEqual(self.instance.version, __version__)
         self.assertEqual(self.instance.description, None)
 
+        assert isinstance(module := self.instance.module, FakeModule)
+        self.assertEqual(module.ENVAR_PREFIX, "FakeConfig_FakeModule")
+
     def test_get_environ(self):
-        with mock.patch.dict(os.environ, {"XC_FAKESETTINGS_VERSION": "VERSION1"}):  # noqa:E501
+        with mock.patch.dict(os.environ, {"FAKECONFIG_VERSION": "VERSION1"}):
             self.assertEqual(self.instance.version, "VERSION1")
 
         @dataclass
         class FakeSettings2(Settings):
             version: str
             number = 1234567890
-            # Environment Variable Prefix
-            ENVAR_PREFIX: str = "config"
 
             @property
             def hello(self) -> str:
                 return "world"
 
         with mock.patch.dict(os.environ, {
-            "CONFIG_VERSION": "VERSION",
-            "CONFIG_NUMBER": "12345678",
-            "CONFIG_HELLO": "WORLD",
+            "XC_FAKESETTINGS2_VERSION": "VERSION",
+            "XC_FAKESETTINGS2_NUMBER": "12345678",
+            "XC_FAKESETTINGS2_HELLO": "WORLD",
         }):
             instance = FakeSettings2(version="_VERSION_")
             self.assertEqual(instance.version, "VERSION")
@@ -172,9 +179,10 @@ class TestSettings(TestCase):
             name="FakeSettings",
             module={
                 "index": 1234567890,
-                "value": "FakeModule"
+                "value": "FakeModule",
             }
         )
+        self.assertIsInstance(instance.module, FakeModule)
         self.assertEqual(instance.name, "FakeSettings")
         self.assertEqual(instance.version, __version__)
         self.assertEqual(instance.description, None)
