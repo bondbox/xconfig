@@ -1,10 +1,10 @@
 # coding:utf-8
 
+from dataclasses import dataclass
 from os.path import dirname
 from os.path import join
+from pathlib import Path
 import sys
-from dataclasses import dataclass
-import os
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 from unittest import main
@@ -26,7 +26,7 @@ class TestConfigJSON(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.file: str = f"{ConfigFile.DEFAULT_FILE}.json"
+        cls.filename: Path = ConfigFile.DEFAULT_FILE.with_suffix(".toml")
 
     @classmethod
     def tearDownClass(cls):
@@ -39,8 +39,8 @@ class TestConfigJSON(TestCase):
         pass
 
     def test_load(self):
-        with TemporaryDirectory() as tmp:
-            self.config.dumpf(path := os.path.join(tmp, self.file))
+        with TemporaryDirectory() as tmpdir:
+            self.config.dumpf(path := Path(tmpdir) / self.filename)
             instance: FakeConfigTOML = FakeConfigTOML.loadf(path)
             self.assertIsInstance(instance, FakeConfigTOML)
             self.assertIsInstance(instance, ConfigTOML)
