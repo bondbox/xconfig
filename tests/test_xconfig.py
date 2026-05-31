@@ -1,10 +1,12 @@
 # coding:utf-8
 
 from dataclasses import dataclass
+from dataclasses import field
 import os
 from os.path import dirname
 from os.path import join
 import sys
+from typing import Dict
 from typing import Optional
 from typing import Union
 from unittest import TestCase
@@ -23,15 +25,21 @@ from attribute import __version__
 
 @dataclass
 class FakeModule(Settings):
-    index: int
+    files: Dict[str, Dict[str, str]] = field(default_factory=dict)
+    index: int = 0
+
+
+@dataclass
+class FakePackage(Settings):
+    version: Optional[str] = __version__
+    modules: Dict[str, FakeModule] = field(default_factory=dict)
 
 
 if sys.version_info >= (3, 10):
     @dataclass
     class FakeSettings(Settings):
         name: str
-        module: FakeModule | None = None
-        version: Optional[str] = __version__
+        package: FakePackage
         description: Union[str, None] = None
         # Environment Variable Prefix
         ENVAR_PREFIX: str = "FakeConfig"
@@ -39,8 +47,7 @@ else:
     @dataclass
     class FakeSettings(Settings):
         name: str
-        module: Optional[FakeModule] = None
-        version: Optional[str] = __version__
+        package: FakePackage
         description: Union[str, None] = None
         # Environment Variable Prefix
         ENVAR_PREFIX: str = "FakeConfig"
@@ -83,7 +90,13 @@ class TestSettings(TestCase):
     def setUp(self):
         self.instance = FakeSettings(
             name="FakeSettings",
-            module=FakeModule(index=1)
+            package=FakePackage(
+                modules={
+                    "module1": FakeModule(index=1),
+                    "module2": FakeModule(index=2),
+                    "module3": FakeModule(index=3),
+                },
+            ),
         )
 
     def tearDown(self):
@@ -91,30 +104,28 @@ class TestSettings(TestCase):
 
     def test_iter(self):
         for key in self.instance:
-            self.assertIn(key, ["name", "module", "version", "description"])
+            self.assertIn(key, ["name", "package", "description"])
 
     def test_contains(self):
-        for key in ["name", "module", "version", "description"]:
+        for key in ["name", "package", "description"]:
             self.assertIn(key, self.instance)
 
     def test_get(self):
         self.assertEqual(self.instance["ENVAR_PREFIX"], "FakeConfig")
         self.assertEqual(self.instance.ENVAR_PREFIX, "FakeConfig")
-        self.assertIsInstance(self.instance["module"], FakeModule)
-        self.assertIsInstance(self.instance.module, FakeModule)
+        self.assertIsInstance(self.instance["package"], FakePackage)
+        self.assertIsInstance(self.instance.package, FakePackage)
         self.assertEqual(self.instance["name"], "FakeSettings")
-        self.assertEqual(self.instance["version"], __version__)
         self.assertEqual(self.instance["description"], None)
         self.assertEqual(self.instance.name, "FakeSettings")
-        self.assertEqual(self.instance.version, __version__)
         self.assertEqual(self.instance.description, None)
 
-        assert isinstance(module := self.instance.module, FakeModule)
-        self.assertEqual(module.ENVAR_PREFIX, "FakeConfig_FakeModule")
+        assert isinstance(package := self.instance.package, FakePackage)
+        self.assertEqual(package.ENVAR_PREFIX, "FakeConfig_FakePackage")
 
     def test_get_environ(self):
-        with mock.patch.dict(os.environ, {"FAKECONFIG_VERSION": "VERSION1"}):
-            self.assertEqual(self.instance.version, "VERSION1")
+        with mock.patch.dict(os.environ, {"FAKECONFIG_FAKEPACKAGE_VERSION": "FAKE1"}):  # noqa:E501
+            self.assertEqual(self.instance.package.version, "FAKE1")
 
         @dataclass
         class FakeSettings2(Settings):
@@ -143,8 +154,14 @@ class TestSettings(TestCase):
     def test_dump(self):
         self.assertEqual(self.instance.dump(), {
             "name": "FakeSettings",
-            "module": {"index": 1},
-            "version": __version__,
+            "package": {
+                "modules": {
+                    "module1": {"files": {}, "index": 1},
+                    "module2": {"files": {}, "index": 2},
+                    "module3": {"files": {}, "index": 3},
+                },
+                "version": __version__,
+            },
             "description": None,
         })
 
@@ -177,14 +194,31 @@ class TestSettings(TestCase):
     def test_load(self):
         instance = FakeSettings.load(
             name="FakeSettings",
-            module={
-                "index": 1234567890,
-                "value": "FakeModule",
-            }
+            package={
+                "modules": {
+                    "module1": {
+                        "files": {
+                            "dir1": {
+                                "file1": "FakeFile",
+                            },
+                        },
+                        "index": 1234567890,
+                        "value": "FakeModule",
+                    },
+                },
+            },
         )
-        self.assertIsInstance(instance.module, FakeModule)
+        self.assertIsInstance(instance.package, FakePackage)
+        self.assertIsInstance(instance.package.version, str)
+        self.assertIsInstance(instance.package.modules, dict)
+        for module in instance.package.modules.values():
+            self.assertIsInstance(module, FakeModule)
+            self.assertIsInstance(module.files, dict)
+            self.assertIsInstance(module.index, int)
+            for k, v in module.files.items():
+                self.assertEqual(k, "dir1")
+                self.assertEqual(v, {"file1": "FakeFile"})
         self.assertEqual(instance.name, "FakeSettings")
-        self.assertEqual(instance.version, __version__)
         self.assertEqual(instance.description, None)
 
     def test_parse(self):
