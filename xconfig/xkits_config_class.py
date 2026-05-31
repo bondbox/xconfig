@@ -18,7 +18,11 @@ def parse_dataclass(cls: Type[Any]) -> Iterator[Annot]:
     from dataclasses import MISSING  # pylint: disable=C0415
     from dataclasses import fields  # pylint: disable=C0415
     for field in fields(cls):  # type: ignore
-        if (default := field.default) is MISSING:
+        if field.default_factory is not MISSING:
+            default = field.default_factory
+        elif field.default is not MISSING:
+            default = field.default
+        else:
             default = Annot.NULL
         yield Annot(field.name, field.type, default)
 
