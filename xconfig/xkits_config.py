@@ -80,6 +80,10 @@ class Settings():
     def dump(self) -> Dict[str, Any]:
 
         def __dump(value: Any):
+
+            if isinstance(value, list):
+                return [__dump(v) for v in value]
+
             if isinstance(value, dict):
                 return {k: __dump(v) for k, v in value.items()}
 
@@ -88,37 +92,73 @@ class Settings():
         return {k: __dump(value=self[k]) for k in self if k not in ["ENVAR_PREFIX"]}  # noqa:E501
 
     @classmethod
+    def __load_dict(cls, ftype: Type[Any], value: Dict[str, Any]):
+        _subclasses: List[Type[Settings]] = []
+        _origindict: List[Type[Dict]] = []
+
+        if (origin_is_dict := get_origin(ftype) is dict):
+            _, ftype = get_args(ftype)
+
+        for _annot in each_annot(ftype):
+            if isclass(_annot) and issubclass(_annot, Settings):
+                _subclasses.append(_annot)
+            elif get_origin(_annot) is dict:
+                _origindict.append(_annot)
+
+        if len(_subclasses) + len(_origindict) > 1:
+            raise TypeError("cannot define multiple Settings or Dict")
+
+        if len(_subclasses) == 1:
+            subclass = _subclasses[0]
+            if origin_is_dict:
+                return {
+                    k: subclass.load(**v) if isinstance(v, dict) else v
+                    for k, v in value.items()
+                }
+            return subclass.load(**value)
+
+        if len(_origindict) == 1:
+            return {k: cls.__load_dict(_origindict[0], v) for k, v in value.items()}  # noqa:E501
+
+        return value
+
+    @classmethod
+    def __load_list(cls, ftype: Type[Any], value: List[Any]):
+        _subclasses: List[Type[Settings]] = []
+        _origindict: List[Type[Dict]] = []
+        _originlist: List[Type[List]] = []
+
+        if get_origin(ftype) is list:
+            ftype = get_args(ftype)[0]
+
+        for _annot in each_annot(ftype):
+            if isclass(_annot) and issubclass(_annot, Settings):
+                _subclasses.append(_annot)
+            elif (origin := get_origin(_annot)) is dict:
+                _origindict.append(_annot)
+            elif origin is list:
+                _originlist.append(_annot)
+
+        if len(_subclasses) + len(_origindict) > 1:
+            raise TypeError("cannot define multiple Settings or Dict")
+
+        if len(_originlist) > 1:
+            raise TypeError("cannot define multiple List")
+
+        def __convert(v: Any):
+            if isinstance(v, list) and len(_originlist) == 1:
+                return cls.__load_list(_originlist[0], v)
+            if isinstance(v, dict):
+                if len(_origindict) == 1:
+                    return cls.__load_dict(_origindict[0], v)
+                if len(_subclasses) == 1:
+                    return _subclasses[0].load(**v)
+            return v
+
+        return [__convert(v) for v in value]
+
+    @classmethod
     def load(cls: Type[TS], **kwargs: Any) -> TS:
-
-        def __load_dict(ftype: Type[Any], value: Dict[str, Any]):
-            _subclasses: List[Type[Settings]] = []
-            _recursions: List[Type[Dict]] = []
-
-            if (origin_is_dict := get_origin(ftype) is dict):
-                _, ftype = get_args(ftype)
-
-            for _annot in each_annot(ftype):
-                if isclass(_annot) and issubclass(_annot, Settings):
-                    _subclasses.append(_annot)
-                elif get_origin(_annot) is dict:
-                    _recursions.append(_annot)
-
-            if len(_subclasses) + len(_recursions) > 1:
-                raise TypeError("cannot define multiple Settings or Dict")
-
-            if len(_subclasses) == 1:
-                subclass = _subclasses[0]
-                if origin_is_dict:
-                    return {
-                        k: subclass.load(**v) if isinstance(v, dict) else v
-                        for k, v in value.items()
-                    }
-                return subclass.load(**value)
-
-            if len(_recursions) == 1:
-                return {k: __load_dict(_recursions[0], v) for k, v in value.items()}  # noqa:E501
-
-            return value
 
         def __load(fields: List[Annot], values: Dict[str, Any]):
             _args: Dict[str, Any] = {}
@@ -128,7 +168,9 @@ class Settings():
                     raise ValueError(f"{cls.__name__}.{field.name} no default")
 
                 if isinstance(value, Dict):
-                    value = __load_dict(field.type, value)
+                    value = cls.__load_dict(field.type, value)
+                elif isinstance(value, List):
+                    value = cls.__load_list(field.type, value)
 
                 _args[field.name] = value
 

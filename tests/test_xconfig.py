@@ -7,6 +7,7 @@ from os.path import dirname
 from os.path import join
 import sys
 from typing import Dict
+from typing import List
 from typing import Optional
 from typing import Union
 from unittest import TestCase
@@ -19,8 +20,16 @@ sys.path.insert(0, join(dirname(__file__), "..", "xconfig"))
 from xkits_config import Settings
 from xkits_config_annot import Annot
 
+from attribute import __author__
+from attribute import __author_email__
 from attribute import __description__
 from attribute import __version__
+
+
+@dataclass
+class FakeAuthor(Settings):
+    name: str
+    email: str
 
 
 @dataclass
@@ -32,6 +41,7 @@ class FakeModule(Settings):
 @dataclass
 class FakePackage(Settings):
     version: Optional[str] = __version__
+    authors: List[FakeAuthor] = field(default_factory=list)
     modules: Dict[str, FakeModule] = field(default_factory=dict)
 
 
@@ -91,6 +101,10 @@ class TestSettings(TestCase):
         self.instance = FakeSettings(
             name="FakeSettings",
             package=FakePackage(
+                authors=[
+                    FakeAuthor(name=__author__, email=__author_email__),
+                    FakeAuthor(name=__author__, email=__author_email__),
+                ],
                 modules={
                     "module1": FakeModule(index=1),
                     "module2": FakeModule(index=2),
@@ -155,6 +169,10 @@ class TestSettings(TestCase):
         self.assertEqual(self.instance.dump(), {
             "name": "FakeSettings",
             "package": {
+                "authors": [
+                    {"name": __author__, "email": __author_email__},
+                    {"name": __author__, "email": __author_email__},
+                ],
                 "modules": {
                     "module1": {"files": {}, "index": 1},
                     "module2": {"files": {}, "index": 2},
@@ -165,10 +183,7 @@ class TestSettings(TestCase):
             "description": None,
         })
 
-    def test_load_no_default(self):
-        self.assertRaises(ValueError, FakeSettings.load)
-
-    def test_load_check_subclass_type(self):
+    def test_load_dict_check_multiple_dict(self):
         @dataclass
         class FakeModule1(Settings):
             index: int
@@ -189,12 +204,50 @@ class TestSettings(TestCase):
             @dataclass
             class FakeSettings(Settings):
                 module: Union[FakeModule1, FakeModule2, FakeModule3]
+
         self.assertRaises(TypeError, FakeSettings.load, module={"index": 1})
+
+    def test_load_list_check_multiple_dict(self):
+        @dataclass
+        class FakeSettings(Settings):
+            indexes: List[Union[Dict[str, str], Dict[str, int]]]
+
+        self.assertRaises(TypeError, FakeSettings.load, indexes=[{"index": 1}])
+
+    def test_load_list_check_multiple_list(self):
+        @dataclass
+        class FakeSettings(Settings):
+            indexes: List[Union[List[str], List[int]]]
+
+        self.assertRaises(TypeError, FakeSettings.load, indexes=[[1, 2, 3]])
+
+    def test_load_list(self):
+        @dataclass
+        class FakeSubclass(Settings):
+            indexes: List[Union[Dict[str, int], int]]
+
+        @dataclass
+        class FakeSettings(Settings):
+            classes: List[List[FakeSubclass]]
+
+        instance = FakeSettings.load(
+            classes=[[{
+                "indexes": [{"a": 1}, 2],
+            }]],
+        )
+        self.assertEqual(instance.classes[0][0].indexes, [{"a": 1}, 2])
+
+    def test_load_no_default(self):
+        self.assertRaises(ValueError, FakeSettings.load)
 
     def test_load(self):
         instance = FakeSettings.load(
             name="FakeSettings",
             package={
+                "authors": [
+                    {"name": __author__, "email": __author_email__},
+                    {"name": __author__, "email": __author_email__},
+                ],
                 "modules": {
                     "module1": {
                         "files": {
@@ -210,6 +263,9 @@ class TestSettings(TestCase):
         )
         self.assertIsInstance(instance.package, FakePackage)
         self.assertIsInstance(instance.package.version, str)
+        self.assertIsInstance(instance.package.authors, list)
+        for author in instance.package.authors:
+            self.assertIsInstance(author, FakeAuthor)
         self.assertIsInstance(instance.package.modules, dict)
         for module in instance.package.modules.values():
             self.assertIsInstance(module, FakeModule)
