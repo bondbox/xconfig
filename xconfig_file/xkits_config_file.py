@@ -29,7 +29,7 @@ class ConfigFile(Settings):
     def dumps(self) -> str:
         raise NotImplementedError()
 
-    def dumpf(self, filepath: Optional[Union[str, Path]] = None) -> Path:
+    def dumpf(self, filepath: Optional[Union[str, Path]] = None, writable: bool = True) -> Optional[Path]:  # noqa:E501
         """dump config to file"""
         if isinstance(filepath, str):
             filepath = Path(filepath)
@@ -37,11 +37,14 @@ class ConfigFile(Settings):
         if not isinstance(filepath, Path):
             filepath = self.filepath
 
-        from xkits_file.safefile import SafeWrite  # pylint: disable=C0415
+        if not filepath.exists() or writable:
+            from xkits_file.safefile import SafeWrite  # pylint: disable=C0415
 
-        with SafeWrite(filepath, encoding=None, truncate=True) as whdl:
-            whdl.write(self.dumps().encode("utf-8"))
-            return filepath
+            with SafeWrite(filepath, encoding=None, truncate=True) as whdl:
+                whdl.write(self.dumps().encode("utf-8"))
+                return filepath
+
+        return None  # pragma: no cover
 
     @classmethod
     def loads(cls: Type[TCF], data: str) -> TCF:
