@@ -20,7 +20,7 @@ max_line_length = 127
 base = "xconfig-attr"
 authors = [ "zoumingzhe",]
 keywords = []
-requirements = [ "attrs",]
+requirements = [ "xkits-config", "attrs",]
 max_complexity = 10
 max_line_length = 127
 
@@ -28,7 +28,7 @@ max_line_length = 127
 base = "xconfig-file"
 authors = [ "zoumingzhe",]
 keywords = []
-requirements = [ "xkits-file>=0.9",]
+requirements = [ "xkits-config", "xkits-file>=0.9",]
 max_complexity = 10
 max_line_length = 127
 
@@ -36,7 +36,7 @@ max_line_length = 127
 base = "xconfig-toml"
 authors = [ "zoumingzhe",]
 keywords = []
-requirements = [ "toml",]
+requirements = [ "xkits-config-file", "toml",]
 max_complexity = 10
 max_line_length = 127
 
@@ -44,7 +44,7 @@ max_line_length = 127
 base = "xconfig-yaml"
 authors = [ "zoumingzhe",]
 keywords = []
-requirements = [ "PyYAML",]
+requirements = [ "xkits-config-file", "PyYAML",]
 max_complexity = 10
 max_line_length = 127
 
