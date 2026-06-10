@@ -5,7 +5,6 @@ SUBDIRS := xconfig xconfig-attr xconfig-file xconfig-toml xconfig-yaml
 
 all: build test
 
-
 release: all
 	if [ -n "${VERSION}" ]; then \
 		git tag -a v${VERSION} -m "release v${VERSION}"; \
@@ -15,38 +14,25 @@ release: all
 version:
 	@echo ${VERSION}
 
+OPTIONS := build clean test install uninstall reinstall
+TARGETS := $(foreach op,$(OPTIONS),$(foreach dir,$(SUBDIRS),$(op)-$(dir)))
 
-build:
-	for dir in $(SUBDIRS); do \
-		make -C $$dir build; \
-	done
+.PHONY: $(TARGETS)
 
+$(TARGETS):
+	@$(eval OP := $(firstword $(subst -, ,$@)))
+	@$(eval DIR := $(word 2,$(subst -, ,$@)))
+	@echo "Running '$(OP)' in '$(DIR)'..."
+	@make -C $(DIR) $(OP)
 
-clean:
-	for dir in $(SUBDIRS); do \
-		make -C $$dir clean; \
-	done
+build: $(foreach dir,$(SUBDIRS),build-$(dir))
 
+clean: $(foreach dir,$(SUBDIRS),clean-$(dir))
 
-test:
-	for dir in $(SUBDIRS); do \
-		make -C $$dir test; \
-	done
+test: $(foreach dir,$(SUBDIRS),test-$(dir))
 
+install: $(foreach dir,$(SUBDIRS),install-$(dir))
 
-install:
-	for dir in $(SUBDIRS); do \
-		make -C $$dir install; \
-	done
+uninstall: $(foreach dir,$(SUBDIRS),uninstall-$(dir))
 
-
-uninstall:
-	for dir in $(SUBDIRS); do \
-		make -C $$dir uninstall; \
-	done
-
-
-reinstall:
-	for dir in $(SUBDIRS); do \
-		make -C $$dir reinstall; \
-	done
+reinstall: $(foreach dir,$(SUBDIRS),reinstall-$(dir))
