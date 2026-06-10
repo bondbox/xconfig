@@ -1,7 +1,7 @@
 MAKEFLAGS += --always-make
 
 VERSION := $(shell python3 -c "from tomllib import load; print(load(open('.xproject_python', 'rb'))['version'])")
-SUBDIRS := xconfig xconfig-attr xconfig-file xconfig-toml xconfig-yaml
+SUBPKGS := xconfig xconfig-attr xconfig-file xconfig-toml xconfig-yaml
 
 all: build test
 
@@ -14,25 +14,20 @@ release: all
 version:
 	@echo ${VERSION}
 
-OPTIONS := build clean test install uninstall reinstall
-TARGETS := $(foreach op,$(OPTIONS),$(foreach dir,$(SUBDIRS),$(op)-$(dir)))
+OPS := build clean test install uninstall reinstall
 
-.PHONY: $(TARGETS)
+define make_target_rule
+.PHONY: $(1)-$(2)
+$(1)-$(2):
+	@echo "Running '$(1)' in '$(2)'..."
+	@make -C $(2) $(1)
+endef
 
-$(TARGETS):
-	@$(eval OP := $(firstword $(subst -, ,$@)))
-	@$(eval DIR := $(word 2,$(subst -, ,$@)))
-	@echo "Running '$(OP)' in '$(DIR)'..."
-	@make -C $(DIR) $(OP)
+$(foreach op,$(OPS),$(foreach pkg,$(SUBPKGS),$(eval $(call make_target_rule,$(op),$(pkg)))))
 
-build: $(foreach dir,$(SUBDIRS),build-$(dir))
-
-clean: $(foreach dir,$(SUBDIRS),clean-$(dir))
-
-test: $(foreach dir,$(SUBDIRS),test-$(dir))
-
-install: $(foreach dir,$(SUBDIRS),install-$(dir))
-
-uninstall: $(foreach dir,$(SUBDIRS),uninstall-$(dir))
-
-reinstall: $(foreach dir,$(SUBDIRS),reinstall-$(dir))
+test: $(foreach pkg,$(SUBPKGS),test-$(pkg))
+build: $(foreach pkg,$(SUBPKGS),build-$(pkg))
+clean: $(foreach pkg,$(SUBPKGS),clean-$(pkg))
+install: $(foreach pkg,$(SUBPKGS),install-$(pkg))
+uninstall: $(foreach pkg,$(SUBPKGS),uninstall-$(pkg))
+reinstall: $(foreach pkg,$(SUBPKGS),reinstall-$(pkg))
