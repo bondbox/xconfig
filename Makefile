@@ -1,9 +1,9 @@
 MAKEFLAGS += --always-make
 
-VERSION := $(shell python3 xconfig/setup.py --version)
+VERSION := $(shell python3 -c "from tomllib import load; print(load(open('.xproject_python', 'rb'))['version'])")
+SUBPKGS := xconfig xconfig-attr xconfig-file xconfig-toml xconfig-yaml
 
-all: build reinstall test
-
+all: build test
 
 release: all
 	if [ -n "${VERSION}" ]; then \
@@ -14,61 +14,20 @@ release: all
 version:
 	@echo ${VERSION}
 
+OPS := build clean test install uninstall reinstall
 
-clean-cover:
-	rm -rf cover .coverage coverage.xml htmlcov
-clean-tox:
-	rm -rf .stestr .tox
-clean: build-clean test-clean clean-cover clean-tox
+define make_target_rule
+.PHONY: $(1)-$(2)
+$(1)-$(2):
+	@echo "Running '$(1)' in '$(2)'..."
+	@make -C $(2) $(1)
+endef
 
+$(foreach op,$(OPS),$(foreach pkg,$(SUBPKGS),$(eval $(call make_target_rule,$(op),$(pkg)))))
 
-upload:
-	python3 -m pip install --upgrade xpip-upload
-	xpip-upload --config-file .pypirc xconfig*/dist/*
-
-
-build-prepare:
-	python3 -m pip install --upgrade -r xconfig/requirements.txt
-	python3 -m pip install --upgrade -r xconfig_attr/requirements.txt
-	python3 -m pip install --upgrade -r xconfig_file/requirements.txt
-	python3 -m pip install --upgrade -r xconfig_toml/requirements.txt
-	python3 -m pip install --upgrade -r xconfig_yaml/requirements.txt
-	python3 -m pip install --upgrade xpip-build
-build-clean:
-	xpip-build --debug --path xconfig setup --clean
-	xpip-build --debug --path xconfig_attr setup --clean
-	xpip-build --debug --path xconfig_file setup --clean
-	xpip-build --debug --path xconfig_toml setup --clean
-	xpip-build --debug --path xconfig_yaml setup --clean
-build: build-prepare build-clean
-	xpip-build --debug --path xconfig setup --all
-	xpip-build --debug --path xconfig_attr setup --all
-	xpip-build --debug --path xconfig_file setup --all
-	xpip-build --debug --path xconfig_toml setup --all
-	xpip-build --debug --path xconfig_yaml setup --all
-
-
-install:
-	python3 -m pip install --force-reinstall --no-deps xconfig*/dist/*.whl
-uninstall:
-	python3 -m pip uninstall -y xkits-config-attrs
-	python3 -m pip uninstall -y xkits-config-yaml
-	python3 -m pip uninstall -y xkits-config-toml
-	python3 -m pip uninstall -y xkits-config-file
-	python3 -m pip uninstall -y xkits-config
-reinstall: uninstall install
-
-
-test-prepare:
-	python3 -m pip install --upgrade mock pylint flake8 pytest pytest-cov
-pylint:
-	pylint $(shell git ls-files xconfig*/xkits_config*.py)
-flake8:
-	flake8 xconfig* --count --select=E9,F63,F7,F82 --show-source --statistics
-	flake8 xconfig* --count --exit-zero --max-complexity=15 --max-line-length=127 --statistics
-pytest:
-	pytest --cov=xconfig_yaml --cov=xconfig_toml --cov=xconfig_file --cov=xconfig_attr --cov=xconfig --cov-report=term-missing --cov-report=xml --cov-report=html --cov-config=.coveragerc --cov-fail-under=100
-pytest-clean:
-	rm -rf .pytest_cache
-test: test-prepare pylint flake8 pytest
-test-clean: pytest-clean
+test: $(foreach pkg,$(SUBPKGS),test-$(pkg))
+build: $(foreach pkg,$(SUBPKGS),build-$(pkg))
+clean: $(foreach pkg,$(SUBPKGS),clean-$(pkg))
+install: $(foreach pkg,$(SUBPKGS),install-$(pkg))
+uninstall: $(foreach pkg,$(SUBPKGS),uninstall-$(pkg))
+reinstall: $(foreach pkg,$(SUBPKGS),reinstall-$(pkg))

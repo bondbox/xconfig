@@ -12,9 +12,10 @@ from typing import TypeVar
 from typing import get_args
 from typing import get_origin
 
+from xkits_lib.annot import each_annot
+
 from xkits_config_annot import Annot
 from xkits_config_class import parse
-from xkits_lib.annot import each_annot
 
 TS = TypeVar("TS", bound="Settings")
 

@@ -6,7 +6,7 @@ __project_desc__ = "Config module"
 __project_home__ = "https://github.com/bondbox/xconfig/"
 
 # package info
-__package_name__ = "xkits-config"
+__package_name__ = "xkits-config-toml"
 __package_vers__ = "0.5"
 
 # authors info
