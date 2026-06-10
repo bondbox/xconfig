@@ -2,7 +2,7 @@ name = "xconfig"
 home = "https://github.com/bondbox/xconfig/"
 description = "Config module"
 keywords = [ "config", "configuration",]
-version = "0.5"
+version = "0.6"
 
 [authors.zoumingzhe]
 name = "Mingzhe Zou"

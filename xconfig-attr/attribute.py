@@ -7,7 +7,7 @@ __project_home__ = "https://github.com/bondbox/xconfig/"
 
 # package info
 __package_name__ = "xkits-config-attr"
-__package_vers__ = "0.5"
+__package_vers__ = "0.6"
 
 # authors info
 __authors__ = [
