@@ -1,18 +1,8 @@
 # coding:utf-8
 
+__version__ = "0.6"
+
 # project info
 __project_name__ = "xconfig"
-__project_desc__ = "Config module"
 __project_home__ = "https://github.com/bondbox/xconfig/"
-
-# package info
-__package_name__ = "xkits-config"
-__package_vers__ = "0.6"
-
-# authors info
-__authors__ = [
-    {
-        "name": "Mingzhe Zou",
-        "email": "zoumingzhe@outlook.com"
-    }
-]
+__project_desc__ = "Config module"

@@ -19,9 +19,8 @@ sys.path.insert(0, join(dirname(__file__), ".."))
 from xkits_config import Settings
 from xkits_config_annot import Annot
 
-from attribute import __authors__
-from attribute import __package_vers__
 from attribute import __project_desc__
+from attribute import __version__
 
 
 @dataclass
@@ -38,7 +37,7 @@ class FakeModule(Settings):
 
 @dataclass
 class FakePackage(Settings):
-    version: Optional[str] = __package_vers__
+    version: Optional[str] = __version__
     authors: List[FakeAuthor] = field(default_factory=list)
     modules: Dict[str, FakeModule] = field(default_factory=dict)
 
@@ -100,8 +99,8 @@ class TestSettings(TestCase):
             name="FakeSettings",
             package=FakePackage(
                 authors=[
-                    FakeAuthor(name=__authors__[0]["name"], email=__authors__[0]["email"]),  # noqa:E501
-                    FakeAuthor(name=__authors__[0]["name"], email=__authors__[0]["email"]),  # noqa:E501
+                    FakeAuthor(name="user", email="user@example.com"),  # noqa:E501
+                    FakeAuthor(name="user", email="user@example.com"),  # noqa:E501
                 ],
                 modules={
                     "module1": FakeModule(index=1),
@@ -168,15 +167,15 @@ class TestSettings(TestCase):
             "name": "FakeSettings",
             "package": {
                 "authors": [
-                    __authors__[0],
-                    __authors__[0],
+                    {"name": "user", "email": "user@example.com"},
+                    {"name": "user", "email": "user@example.com"},
                 ],
                 "modules": {
                     "module1": {"files": {}, "index": 1},
                     "module2": {"files": {}, "index": 2},
                     "module3": {"files": {}, "index": 3},
                 },
-                "version": __package_vers__,
+                "version": __version__,
             },
             "description": None,
         })
@@ -243,8 +242,8 @@ class TestSettings(TestCase):
             name="FakeSettings",
             package={
                 "authors": [
-                    __authors__[0],
-                    __authors__[0],
+                    {"name": "user", "email": "user@example.com"},
+                    {"name": "user", "email": "user@example.com"},
                 ],
                 "modules": {
                     "module1": {

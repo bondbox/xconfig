@@ -4,16 +4,27 @@ requires = [ "hatch-requirements-txt", "hatchling", "xpip-build>=1.4",]
 
 [project]
 classifiers = [ "Programming Language :: Python", "Programming Language :: Python :: 3",]
-dynamic = [ "name", "urls", "authors", "version", "description", "dependencies",]
+description = "Config module"
+dynamic = [ "dependencies", "version",]
 keywords = [ "config", "configuration",]
 license-files = [ "LICENSE",]
+name = "xkits-config"
 requires-python = ">=3.8"
+[[project.authors]]
+name = "Mingzhe Zou"
+email = "zoumingzhe@outlook.com"
 
 [project.readme]
 content-type = "text/markdown"
 file = "readme.md"
 
 [project.scripts]
+
+[project.urls]
+Homepage = "https://github.com/bondbox/xconfig/"
+
+[tool.hatch.version]
+path = "attribute.py"
 
 [tool.hatch.build.targets.sdist]
 exclude = []
@@ -22,8 +33,6 @@ packages = [ "xkits_config_annot.py", "xkits_config_class.py", "xkits_config.py"
 [tool.hatch.build.targets.wheel]
 exclude = []
 packages = [ "xkits_config_annot.py", "xkits_config_class.py", "xkits_config.py",]
-
-[tool.hatch.metadata.hooks.custom]
 
 [tool.hatch.metadata.hooks.requirements_txt]
 files = [ "requirements.txt",]
