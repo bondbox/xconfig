@@ -48,7 +48,7 @@ class TestDataclass(TestCase):
             names: List[str] = field(default_factory=list)
 
         for annot in (annots := list(parse_dataclass(FakeSettings))):
-            self.assertIs(annot.default, list)
+            self.assertEqual(annot.default, list())
 
         self.assertEqual(len(annots), 1)
 

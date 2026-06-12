@@ -49,7 +49,7 @@ class TestAttrs(TestCase):
             names: List[str] = attrib(factory=list)
 
         for annot in (annots := list(parse_attrs(FakeSettings))):
-            self.assertIs(annot.default, list)
+            self.assertEqual(annot.default, list())
 
         self.assertEqual(len(annots), 1)
 

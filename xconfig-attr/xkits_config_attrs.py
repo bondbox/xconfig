@@ -17,5 +17,5 @@ def parse_attrs(cls: Type[Any]) -> Iterator[Annot]:
         if (default := field.default) is NOTHING:
             default = Annot.NULL
         elif isinstance(default, Factory):  # type: ignore
-            default = default.factory  # type: ignore
+            default = default.factory()  # type: ignore
         yield Annot(field.name, field.type, default)
