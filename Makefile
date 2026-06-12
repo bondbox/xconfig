@@ -3,7 +3,7 @@ MAKEFLAGS += --always-make
 VERSION := $(shell python3 -c "from tomllib import load; print(load(open('.xproject_python', 'rb'))['version'])")
 SUBPKGS := xconfig xconfig-attr xconfig-file xconfig-toml xconfig-yaml
 
-all: build test
+all: build reinstall test
 
 release: all
 	if [ -n "${VERSION}" ]; then \
