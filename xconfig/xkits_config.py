@@ -106,10 +106,10 @@ class Settings():
             elif get_origin(_annot) is dict:
                 _origindict.append(_annot)
 
-        if len(_subclasses) + len(_origindict) > 1:
+        if (num_subclasses := len(_subclasses)) + (num_origindict := len(_origindict)) > 1:  # noqa:E501
             raise TypeError("cannot define multiple Settings or Dict")
 
-        if len(_subclasses) == 1:
+        if num_subclasses == 1:
             subclass = _subclasses[0]
             if origin_is_dict:
                 return {
@@ -118,7 +118,7 @@ class Settings():
                 }
             return subclass.load(**value)
 
-        if len(_origindict) == 1:
+        if num_origindict == 1:
             return {k: cls.__load_dict(_origindict[0], v) for k, v in value.items()}  # noqa:E501
 
         return value
@@ -140,19 +140,19 @@ class Settings():
             elif origin is list:
                 _originlist.append(_annot)
 
-        if len(_subclasses) + len(_origindict) > 1:
+        if (num_subclasses := len(_subclasses)) + (num_origindict := len(_origindict)) > 1:  # noqa:E501
             raise TypeError("cannot define multiple Settings or Dict")
 
-        if len(_originlist) > 1:
+        if (num_originlist := len(_originlist)) > 1:
             raise TypeError("cannot define multiple List")
 
         def __convert(v: Any):
-            if isinstance(v, list) and len(_originlist) == 1:
+            if isinstance(v, list) and num_originlist == 1:
                 return cls.__load_list(_originlist[0], v)
             if isinstance(v, dict):
-                if len(_origindict) == 1:
+                if num_origindict == 1:
                     return cls.__load_dict(_origindict[0], v)
-                if len(_subclasses) == 1:
+                if num_subclasses == 1:
                     return _subclasses[0].load(**v)
             return v
 
