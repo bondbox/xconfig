@@ -1,2 +1,2 @@
-xkits-config-file>=0.6
+xkits-config-file>=0.7
 toml
