@@ -1,2 +1,2 @@
-xkits-config>=0.7
+xkits-config>=0.8
 attrs

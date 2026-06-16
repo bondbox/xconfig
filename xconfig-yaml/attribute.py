@@ -6,6 +6,6 @@ __project_home__ = "https://github.com/bondbox/xconfig/"
 __project_desc__ = "Config module"
 
 # package info
-__version__ = "0.7"
+__version__ = "0.8"
 __package_name__ = "xkits-config-yaml"
 __package_desc__ = "Config module"
