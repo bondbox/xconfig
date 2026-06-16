@@ -13,7 +13,7 @@ class ConfigTOML(ConfigFile):
     def dumps(self) -> str:
         """dump config to toml string"""
         from tomli_w import dumps  # pylint: disable=import-outside-toplevel
-        return dumps(super().dump())
+        return dumps(super().dump(omit_null=True))
 
     @classmethod
     def loads(cls: Type[TCT], data: str) -> TCT:

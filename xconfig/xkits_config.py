@@ -78,19 +78,20 @@ class Settings():
     def get(self, name: str) -> Any:
         return getattr(self, name)
 
-    def dump(self) -> Dict[str, Any]:
+    def dump(self, omit_null: bool = False) -> Dict[str, Any]:
 
-        def __dump(value: Any):
+        def __dump(value: Any, omit_null: bool):
 
             if isinstance(value, list):
-                return [__dump(v) for v in value]
+                return [__dump(value=v, omit_null=omit_null) for v in value]  # noqa:E501
 
             if isinstance(value, dict):
-                return {k: __dump(v) for k, v in value.items()}
+                return {k: __dump(value=v, omit_null=omit_null) for k, v in value.items()}  # noqa:E501
 
-            return value.dump() if isinstance(value, Settings) else value
+            return value.dump(omit_null=omit_null) if isinstance(value, Settings) else value  # noqa:E501
 
-        return {k: __dump(value=self[k]) for k in self if k not in ["ENVAR_PREFIX"]}  # noqa:E501
+        return {k: __dump(value=v, omit_null=omit_null) for k in self
+                if k not in ["ENVAR_PREFIX"] and ((v := self[k]) is not None or not omit_null)}  # noqa:E501
 
     @classmethod
     def __load_dict(cls, ftype: Type[Any], value: Dict[str, Any]):
