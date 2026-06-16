@@ -1,2 +1,3 @@
 xkits-config-file>=0.7
-toml
+tomli-w
+tomli

@@ -40,7 +40,7 @@ base = "xconfig-toml"
 requires_python = ">=3.8"
 authors = [ "zoumingzhe",]
 keywords = []
-requirements = [ "xkits-config-file", "toml",]
+requirements = [ "xkits-config-file", "tomli-w", "tomli",]
 max_complexity = 10
 max_line_length = 127
 
