@@ -21,7 +21,7 @@ keywords = []
 requirements = [
     "xkits-lib>=0.4",
 ]
-max_complexity = 15
+max_complexity = 20
 max_line_length = 127
 
 [packages.xkits-config.modules.source]

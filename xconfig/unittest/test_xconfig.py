@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from dataclasses import field
+from enum import Enum
 import os
 from os.path import dirname
 from os.path import join
@@ -29,6 +30,16 @@ class FakeAuthor(Settings):
     email: str
 
 
+class FakeBackend(Enum):
+    HATCH = "hatchling"
+    SETUP = "setuptools"
+
+
+class FakeBackendInvert(Enum):
+    hatchling = "HATCH"
+    setuptools = "SETUP"
+
+
 @dataclass
 class FakeModule(Settings):
     files: Dict[str, Dict[str, str]] = field(default_factory=dict)
@@ -38,6 +49,7 @@ class FakeModule(Settings):
 @dataclass
 class FakePackage(Settings):
     version: Optional[str] = __version__
+    backend: FakeBackend = FakeBackend.HATCH
     authors: List[FakeAuthor] = field(default_factory=list)
     modules: Dict[str, FakeModule] = field(default_factory=dict)
 
@@ -170,6 +182,7 @@ class TestSettings(TestCase):
                     {"name": "user", "email": "user@example.com"},
                     {"name": "user", "email": "user@example.com"},
                 ],
+                "backend": "HATCH",
                 "modules": {
                     "module1": {"files": {}, "index": 1},
                     "module2": {"files": {}, "index": 2},
@@ -204,6 +217,22 @@ class TestSettings(TestCase):
 
         self.assertRaises(TypeError, FakeSettings.load, module={"index": 1})
 
+    def test_load_dict_check_multiple_enum(self):
+        @dataclass
+        class FakeSettings(Settings):
+            backend: Dict[str, Union[FakeBackend, FakeBackendInvert]]
+
+        self.assertRaises(TypeError, FakeSettings.load, backend={"demo": "setuptools"})  # noqa:E501
+
+    def test_load_dict_enum(self):
+        @dataclass
+        class FakeSettings(Settings):
+            backend: Dict[str, FakeBackend]
+
+        instance = FakeSettings.load(backend={"demo": "SETUP"})
+        self.assertIsInstance(instance, FakeSettings)
+        self.assertEqual(instance.backend, {"demo": FakeBackend.SETUP})
+
     def test_load_list_check_multiple_dict(self):
         @dataclass
         class FakeSettings(Settings):
@@ -211,12 +240,28 @@ class TestSettings(TestCase):
 
         self.assertRaises(TypeError, FakeSettings.load, indexes=[{"index": 1}])
 
+    def test_load_list_check_multiple_enum(self):
+        @dataclass
+        class FakeSettings(Settings):
+            backend: List[Union[FakeBackend, FakeBackendInvert]]
+
+        self.assertRaises(TypeError, FakeSettings.load, backend=["setuptools"])
+
     def test_load_list_check_multiple_list(self):
         @dataclass
         class FakeSettings(Settings):
             indexes: List[Union[List[str], List[int]]]
 
         self.assertRaises(TypeError, FakeSettings.load, indexes=[[1, 2, 3]])
+
+    def test_load_list_enum(self):
+        @dataclass
+        class FakeSettings(Settings):
+            backend: List[FakeBackend]
+
+        instance = FakeSettings.load(backend=["SETUP"])
+        self.assertIsInstance(instance, FakeSettings)
+        self.assertEqual(instance.backend, [FakeBackend.SETUP])
 
     def test_load_list(self):
         @dataclass
@@ -234,8 +279,24 @@ class TestSettings(TestCase):
         )
         self.assertEqual(instance.classes[0][0].indexes, [{"a": 1}, 2])
 
+    def test_load_check_multiple_enum(self):
+        @dataclass
+        class FakeSettings(Settings):
+            backend: Union[FakeBackend, FakeBackendInvert]
+
+        self.assertRaises(TypeError, FakeSettings.load, backend="setuptools")
+
     def test_load_no_default(self):
         self.assertRaises(ValueError, FakeSettings.load)
+
+    def test_load_enum(self):
+        @dataclass
+        class FakeSettings(Settings):
+            backend: FakeBackend
+
+        instance = FakeSettings.load(backend="SETUP")
+        self.assertIsInstance(instance, FakeSettings)
+        self.assertIs(instance.backend, FakeBackend.SETUP)
 
     def test_load(self):
         instance = FakeSettings.load(

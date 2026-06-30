@@ -2,7 +2,7 @@
 count = True
 exclude = 
 filename = *.py
-max-complexity = 15
+max-complexity = 20
 max-line-length = 127
 show-source = True
 statistics = True

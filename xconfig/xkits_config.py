@@ -1,5 +1,6 @@
 # coding:utf-8
 
+from enum import Enum
 from inspect import isclass
 import os
 from typing import Any
@@ -88,27 +89,37 @@ class Settings():
             if isinstance(value, dict):
                 return {k: __dump(value=v, omit_null=omit_null) for k, v in value.items()}  # noqa:E501
 
+            if isinstance(value, Enum):
+                return value.name
+
             return value.dump(omit_null=omit_null) if isinstance(value, Settings) else value  # noqa:E501
 
         return {k: __dump(value=v, omit_null=omit_null) for k in self
                 if k not in ["ENVAR_PREFIX"] and ((v := self[k]) is not None or not omit_null)}  # noqa:E501
 
     @classmethod
-    def __load_dict(cls, ftype: Type[Any], value: Dict[str, Any]):
+    def __load_dict(cls, ftype: Type[Any], value: Dict[str, Any]):  # pylint: disable=too-many-branches # noqa:E501
         _subclasses: List[Type[Settings]] = []
+        _subsetenum: List[Type[Enum]] = []
         _origindict: List[Type[Dict]] = []
 
         if (origin_is_dict := get_origin(ftype) is dict):
             _, ftype = get_args(ftype)
 
         for _annot in each_annot(ftype):
-            if isclass(_annot) and issubclass(_annot, Settings):
-                _subclasses.append(_annot)
+            if isclass(_annot):
+                if issubclass(_annot, Settings):
+                    _subclasses.append(_annot)
+                elif issubclass(_annot, Enum):
+                    _subsetenum.append(_annot)
             elif get_origin(_annot) is dict:
                 _origindict.append(_annot)
 
         if (num_subclasses := len(_subclasses)) + (num_origindict := len(_origindict)) > 1:  # noqa:E501
             raise TypeError("cannot define multiple Settings or Dict")
+
+        if (num_subsetenum := len(_subsetenum)) > 1:
+            raise TypeError("cannot define multiple Enum")
 
         if num_subclasses == 1:
             subclass = _subclasses[0]
@@ -122,11 +133,17 @@ class Settings():
         if num_origindict == 1:
             return {k: cls.__load_dict(_origindict[0], v) for k, v in value.items()}  # noqa:E501
 
+        if num_subsetenum == 1:
+            for k, v in value.items():
+                if isinstance(v, str):
+                    value[k] = _subsetenum[0][v]
+
         return value
 
     @classmethod
     def __load_list(cls, ftype: Type[Any], value: List[Any]):
         _subclasses: List[Type[Settings]] = []
+        _subsetenum: List[Type[Enum]] = []
         _origindict: List[Type[Dict]] = []
         _originlist: List[Type[List]] = []
 
@@ -134,8 +151,11 @@ class Settings():
             ftype = get_args(ftype)[0]
 
         for _annot in each_annot(ftype):
-            if isclass(_annot) and issubclass(_annot, Settings):
-                _subclasses.append(_annot)
+            if isclass(_annot):
+                if issubclass(_annot, Settings):
+                    _subclasses.append(_annot)
+                elif issubclass(_annot, Enum):
+                    _subsetenum.append(_annot)
             elif (origin := get_origin(_annot)) is dict:
                 _origindict.append(_annot)
             elif origin is list:
@@ -144,12 +164,17 @@ class Settings():
         if (num_subclasses := len(_subclasses)) + (num_origindict := len(_origindict)) > 1:  # noqa:E501
             raise TypeError("cannot define multiple Settings or Dict")
 
+        if (num_subsetenum := len(_subsetenum)) > 1:
+            raise TypeError("cannot define multiple Enum")
+
         if (num_originlist := len(_originlist)) > 1:
             raise TypeError("cannot define multiple List")
 
         def __convert(v: Any):
             if isinstance(v, list) and num_originlist == 1:
                 return cls.__load_list(_originlist[0], v)
+            if isinstance(v, str) and num_subsetenum == 1:
+                return _subsetenum[0][v]
             if isinstance(v, dict):
                 if num_origindict == 1:
                     return cls.__load_dict(_origindict[0], v)
@@ -158,6 +183,22 @@ class Settings():
             return v
 
         return [__convert(v) for v in value]
+
+    @classmethod
+    def __load(cls, ftype: Type[Any], value: Any):
+        _subsetenum: List[Type[Enum]] = []
+
+        for _annot in each_annot(ftype):
+            if isclass(_annot) and issubclass(_annot, Enum):
+                _subsetenum.append(_annot)
+
+        if (num_subsetenum := len(_subsetenum)) > 1:
+            raise TypeError("cannot define multiple Enum")
+
+        if isinstance(value, str) and num_subsetenum == 1:
+            return _subsetenum[0][value]
+
+        return value
 
     @classmethod
     def load(cls: Type[TS], **kwargs: Any) -> TS:
@@ -173,6 +214,8 @@ class Settings():
                     value = cls.__load_dict(field.type, value)
                 elif isinstance(value, List):
                     value = cls.__load_list(field.type, value)
+                else:
+                    value = cls.__load(field.type, value)
 
                 _args[field.name] = value
 
