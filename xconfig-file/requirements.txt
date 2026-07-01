@@ -1,2 +1,2 @@
-xkits-config>=0.8
+xkits-config>=0.9
 xkits-file>=0.10

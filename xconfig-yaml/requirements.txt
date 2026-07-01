@@ -1,2 +1,2 @@
-xkits-config-file>=0.8
+xkits-config-file>=0.9
 pyyaml
