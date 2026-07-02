@@ -22,11 +22,11 @@ keywords = [
     "config",
     "configuration",
 ]
-license-files = [
-    "LICENSE",
-]
 name = "xkits-config-yaml"
 requires-python = ">=3.8"
+
+[project.license]
+file = "LICENSE"
 
 [project.readme]
 content-type = "text/markdown"

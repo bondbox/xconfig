@@ -21,6 +21,7 @@ keywords = []
 requirements = [
     "xkits-lib>=0.4",
 ]
+build_backend = "hatchling"
 max_complexity = 20
 max_line_length = 127
 
@@ -31,14 +32,12 @@ package = [
     "xkits_config_class.py",
     "xkits_config.py",
 ]
+exclude = []
 omitted = [
     "unittest/*",
     "attribute.py",
     "hatch_build.py",
 ]
-exclude = []
-
-[packages.xkits-config.modules.source.include]
 
 [packages.xkits-config.modules.source.scripts]
 
@@ -56,6 +55,7 @@ requirements = [
     "xkits-config",
     "attrs",
 ]
+build_backend = "hatchling"
 max_complexity = 10
 max_line_length = 127
 
@@ -64,14 +64,12 @@ base = "."
 package = [
     "xkits_config_attrs.py",
 ]
+exclude = []
 omitted = [
     "unittest/*",
     "attribute.py",
     "hatch_build.py",
 ]
-exclude = []
-
-[packages.xkits-config-attr.modules.source.include]
 
 [packages.xkits-config-attr.modules.source.scripts]
 
@@ -89,6 +87,7 @@ requirements = [
     "xkits-config",
     "xkits-file>=0.10",
 ]
+build_backend = "hatchling"
 max_complexity = 10
 max_line_length = 127
 
@@ -98,14 +97,12 @@ package = [
     "xkits_config_file.py",
     "xkits_config_json.py",
 ]
+exclude = []
 omitted = [
     "unittest/*",
     "attribute.py",
     "hatch_build.py",
 ]
-exclude = []
-
-[packages.xkits-config-file.modules.source.include]
 
 [packages.xkits-config-file.modules.source.scripts]
 
@@ -124,6 +121,7 @@ requirements = [
     "tomli-w",
     "tomli",
 ]
+build_backend = "hatchling"
 max_complexity = 10
 max_line_length = 127
 
@@ -132,14 +130,12 @@ base = "."
 package = [
     "xkits_config_toml.py",
 ]
+exclude = []
 omitted = [
     "unittest/*",
     "attribute.py",
     "hatch_build.py",
 ]
-exclude = []
-
-[packages.xkits-config-toml.modules.source.include]
 
 [packages.xkits-config-toml.modules.source.scripts]
 
@@ -157,6 +153,7 @@ requirements = [
     "xkits-config-file",
     "PyYAML",
 ]
+build_backend = "hatchling"
 max_complexity = 10
 max_line_length = 127
 
@@ -165,14 +162,12 @@ base = "."
 package = [
     "xkits_config_yaml.py",
 ]
+exclude = []
 omitted = [
     "unittest/*",
     "attribute.py",
     "hatch_build.py",
 ]
-exclude = []
-
-[packages.xkits-config-yaml.modules.source.include]
 
 [packages.xkits-config-yaml.modules.source.scripts]
 
